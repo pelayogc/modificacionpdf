@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}PDF generado{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <h1>PDF generado</h1>
+  <p>El archivo se ha modificado correctamente.</p>
+  <a class="button" href="{{ download_url }}">Descargar PDF</a>
+  <h2>Plan aplicado</h2>
+  <pre>{{ plan | tojson(indent=2) }}</pre>
+</section>
+{% endblock %}

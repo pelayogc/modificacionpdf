@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Modificar PDF{% endblock %}
+{% block content %}
+<section class="workbench">
+  <div class="panel">
+    <h1>Modificar PDF</h1>
+    <form action="/process" method="post" enctype="multipart/form-data">
+      <label>
+        PDF
+        <input type="file" name="pdf" accept="application/pdf" required>
+      </label>
+      <label>
+        Cambios solicitados
+        <textarea name="instructions" rows="8" required placeholder="Ejemplo: resalta todas las menciones a contrato y anade una marca de agua que diga BORRADOR."></textarea>
+      </label>
+      <p class="muted">Tamano maximo: {{ max_upload_mb }} MB</p>
+      <button type="submit">Generar PDF modificado</button>
+    </form>
+  </div>
+  <aside class="side">
+    <h2>Operaciones disponibles</h2>
+    <ul>
+      <li>Anadir texto o marcas de agua.</li>
+      <li>Resaltar, redactar o reemplazar texto.</li>
+      <li>Rotar, eliminar o reordenar paginas.</li>
+    </ul>
+  </aside>
+</section>
+{% endblock %}

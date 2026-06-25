@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Estadisticas{% endblock %}
+{% block content %}
+<section class="stats">
+  <h1>Estadisticas de uso</h1>
+  <div class="metric-grid">
+    <div><strong>{{ stats.totals.total_jobs or 0 }}</strong><span>trabajos</span></div>
+    <div><strong>{{ stats.totals.completed_jobs or 0 }}</strong><span>completados</span></div>
+    <div><strong>{{ stats.totals.failed_jobs or 0 }}</strong><span>fallidos</span></div>
+    <div><strong>{{ stats.totals.input_pages or 0 }}</strong><span>paginas procesadas</span></div>
+  </div>
+
+  <h2>Por usuario</h2>
+  <table>
+    <thead><tr><th>Usuario</th><th>Trabajos</th><th>Completados</th><th>Ultimo uso</th></tr></thead>
+    <tbody>
+      {% for row in stats.by_user %}
+      <tr><td>{{ row.user_email }}</td><td>{{ row.jobs }}</td><td>{{ row.completed }}</td><td>{{ row.last_job_at }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Ultimos trabajos</h2>
+  <table>
+    <thead><tr><th>Fecha</th><th>Usuario</th><th>Archivo</th><th>Estado</th><th>Paginas</th><th>Error</th></tr></thead>
+    <tbody>
+      {% for row in stats.recent %}
+      <tr>
+        <td>{{ row.created_at }}</td>
+        <td>{{ row.user_email }}</td>
+        <td>{{ row.original_filename }}</td>
+        <td>{{ row.status }}</td>
+        <td>{{ row.input_pages or "" }}</td>
+        <td>{{ row.error or "" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
