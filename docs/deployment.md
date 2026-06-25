@@ -50,7 +50,6 @@ Tunnel ingress:
 
 - Initial app deploy: `hsb3hd7yzj1vndbozpoug11r`
 - Final label-regeneration deploy: `cb4vza513tlm4e1k19cuccvv`
-- Documentation redeploy after final notes: `vewmim6zvzlzpf0zkqvcv9wj`
 - Runtime code was introduced in commit `38d8d6fe6608385c234e7429546fd57ace7bc988`; later documentation-only commits can be deployed without changing the application image contents because the Dockerfile copies only `app/` and `requirements.txt`.
 - Status after deployment: `running:healthy`
 
