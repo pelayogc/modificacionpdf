@@ -8,8 +8,15 @@
 - Coolify project UUID: `bkknejfri65pvhxxvbxm9a2e`
 - Coolify production environment UUID: `j7r96k83xk7k5l7viymlr6nc`
 - Coolify server UUID: `jgo08g44gws0k8kw80g8owko`
+- Coolify application: `modificacionpdf-web`
+- Coolify application UUID: `r5hhxxrrpbvyyi7vz74o2jv5`
 - Coolify public GitHub source UUID: `l4gock04gwggocoggwcc080k`
 - Coolify private GitHub App source UUID for `pelayogc`: `uaq30904muhi794ke3fpeaka`
+- Git repository: `https://github.com/pelayogc/modificacionpdf.git`
+- Git branch: `main`
+- Exposed port: `8000`
+- Health check: `/healthz`
+- Persistent storage: `r5hhxxrrpbvyyi7vz74o2jv5-modificacionpdf-data` mounted at `/data`
 
 ## Cloudflare Access
 
@@ -28,29 +35,34 @@ Existing Nobel apps use a proxied CNAME to:
 
 `b4568616-bb1e-461a-be43-27a25576b2eb.cfargotunnel.com`
 
-Do not create `modificacionpdf.nobel.es` DNS alone. Add DNS only together with the matching Cloudflare Tunnel ingress rule and a deployed Coolify application, otherwise the hostname will fall through to the tunnel 404 rule.
+DNS record:
 
-## Deployment blocker
+- `modificacionpdf.nobel.es` CNAME `b4568616-bb1e-461a-be43-27a25576b2eb.cfargotunnel.com`, proxied
+- Cloudflare DNS record ID: `836ff9dfe2c58b611e3c268637c664e8`
 
-The local application is committed at `72f323c`, but there is no remote repository yet:
+Tunnel ingress:
 
-`git@github.com:pelayogc/modificacionpdf.git`
+- Tunnel ID: `b4568616-bb1e-461a-be43-27a25576b2eb`
+- Configuration version with `modificacionpdf.nobel.es`: `19`
+- Rule points to `https://localhost:443` with `originServerName=modificacionpdf.nobel.es` and `noTLSVerify=true`.
 
-GitHub SSH authentication for `pelayogc` works locally, but GitHub does not create repositories on `git push`. Create the repository or provide a GitHub-capable tool/token, then:
+## Deployment
 
-1. Add remote: `git remote add origin git@github.com:pelayogc/modificacionpdf.git`
-2. Push: `git push -u origin main`
-3. Create a Coolify application from the private GitHub App source or public source.
-4. Configure:
-   - build pack: `dockerfile`
-   - Dockerfile: `/Dockerfile`
-   - exposed port: `8000`
-   - health check path: `/healthz`
-   - FQDN: `https://modificacionpdf.nobel.es`
-   - persistent volume: `/data`
-   - environment variables from `.env.example`
-5. Add Cloudflare DNS CNAME and Tunnel ingress for `modificacionpdf.nobel.es`.
-6. Deploy and verify:
-   - internal `/healthz` returns `200`
-   - public unauthenticated request returns Cloudflare Access redirect
-   - authenticated request renders the upload form
+- Initial app deploy: `hsb3hd7yzj1vndbozpoug11r`
+- Final label-regeneration deploy: `cb4vza513tlm4e1k19cuccvv`
+- Deployed commit for the application runtime: `38d8d6fe6608385c234e7429546fd57ace7bc988`
+- Status after deployment: `running:healthy`
+
+Validation performed:
+
+- Internal Coolify proxy: `https://localhost/healthz` with `Host: modificacionpdf.nobel.es` returned `200`.
+- Public unauthenticated request to `https://modificacionpdf.nobel.es/` returned `302` to Cloudflare Access.
+- Internal authenticated-origin simulation with `Cf-Access-Authenticated-User-Email: pelayo@think-tank.es` rendered `Modificar PDF`.
+- Full internal upload smoke test generated a modified PDF result page using the deployed app and OpenAI key.
+
+## Operational notes
+
+- The repository is public, so the application was created through `POST /api/v1/applications/public`.
+- The existing private GitHub App source failed for app creation with `Attempt to read property "private_key" on null`.
+- Coolify API did not allow `fqdn` on create/patch. The field was set directly in the Coolify DB for this app, then `custom_labels` and `config_hash` were cleared before redeploy so labels regenerated for `modificacionpdf.nobel.es`.
+- Env var creation in Coolify 4.1.2 rejects `is_build_time`; use only the accepted env fields.

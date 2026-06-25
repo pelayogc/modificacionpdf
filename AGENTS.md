@@ -35,6 +35,10 @@ Coolify esta en `http://10.164.18.45:8000/`.
 
 ## Aprendizajes Coolify y Cloudflare
 
+- En Coolify 4.1.2, `POST /api/v1/applications/private-github-app` puede fallar con `Attempt to read property "private_key" on null` si la GitHub App existente no tiene private key asociada. Si el repo es publico, usar `POST /api/v1/applications/public` evita depender de esa integracion.
+- En Coolify 4.1.2, el endpoint de creacion de env vars `POST /api/v1/applications/{uuid}/envs` rechaza `is_build_time`; usar `key`, `value`, `is_preview`, `is_literal` e `is_multiline`.
+- En Coolify 4.1.2, `fqdn` puede no estar permitido en `POST/PATCH /api/v1/applications...`. Si se ajusta directamente en la DB, limpiar tambien `custom_labels` y `config_hash` antes de redeploy para que Traefik regenere etiquetas con el dominio real y no conserve el `sslip.io` temporal.
+- En Cloudflare Tunnel gestionado por token remoto (`cloudflared tunnel run --token`), no hay `config.yml` local; actualizar `ingress` con la API `/accounts/{account_id}/cfd_tunnel/{tunnel_id}/configurations`.
 - En lanzamientos nuevos en Coolify, mantener separacion estricta entre repos, proyectos, entornos, claves de despliegue y bases de datos. Confirmar en Coolify `git_repository`, `git_branch`, `environment_id`, `fqdn`, `ports_exposes`, volumenes y base asociada antes de diagnosticar o desplegar.
 - En dominios servidos por Cloudflare Tunnel, crear el CNAME hacia `*.cfargotunnel.com` no basta. El tunel tambien debe tener una regla `ingress` para el hostname antes del `http_status:404`, normalmente apuntando al proxy local de Coolify (`https://localhost:443`) con `originServerName` igual al dominio.
 - Para diagnosticar un 404 en un dominio nuevo de Coolify, comparar contra un dominio que funciona en cuatro capas: DNS, reglas `ingress` del tunel, politica de Cloudflare Access y configuracion Coolify (`fqdn`, puerto expuesto, rama, estado y logs). Si DNS coincide pero el tunel no tiene `ingress`, el dominio caera en el 404 final aunque la app este arrancada.
