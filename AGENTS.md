@@ -21,8 +21,8 @@ Coolify esta en `http://10.164.18.45:8000/`.
 
 - Por defecto, las tareas se validan localmente con `npm run check`, `npm run lint` y, si aplica, servidor local o prueba HTTP local.
 - En este proyecto Python, usar `python -m pytest` y, si aplica, prueba HTTP local contra `/healthz`.
-- No hacer commit, push ni redeployment en Coolify salvo instruccion explicita del usuario.
-- Si el usuario pide desplegar, entonces antes ejecutar `git status --short --branch`, commitear solo cambios propios, hacer push y lanzar redeploy en Coolify.
+- En este proyecto, cada cambio de Codex debe terminar con commit, push y redeployment en Coolify, salvo instruccion explicita en contra.
+- Antes de desplegar, ejecutar `git status --short --branch`, commitear solo cambios propios, hacer push y lanzar redeploy en Coolify.
 - No desplegar si hay cambios locales ajenos sin commitear que puedan hacer que el estado local no coincida con el commit desplegado.
 - En la respuesta final indicar si la tarea quedo solo validada localmente o tambien desplegada. Si se desplego, indicar commit, rama, resultado del push, id del redeploy si existe y verificacion basica.
 
@@ -32,6 +32,10 @@ Coolify esta en `http://10.164.18.45:8000/`.
 - Los usuarios permitidos pertenecen a los dominios `edicionesnobel.com`, `paraninfo.es` y `think-tank.es`.
 - Los administradores iniciales son `pelayo@think-tank.es` y `pelayo@edicionesnobel.com`.
 - La app identifica al usuario desde `Cf-Access-Authenticated-User-Email`; no implementar passwords propios para sustituir Access.
+
+## Aprendizajes de modificacion PDF
+
+- Para cambios semanticos en PDFs, como modificar una direccion, telefono, CIF o dato de cliente, el LLM debe recibir primero texto extraido del PDF con bloques y coordenadas. No planificar `replace_text` con palabras genericas como `direccion`; usar operaciones basadas en bloque/rectangulo cuando el usuario pide cambiar un dato localizado por contexto.
 
 ## Aprendizajes Coolify y Cloudflare
 

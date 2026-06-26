@@ -15,6 +15,7 @@ SUPPORTED_OPERATIONS = {
     "add_watermark",
     "highlight_text",
     "redact_text",
+    "replace_block_text",
     "replace_text",
     "rotate_page",
     "delete_pages",
@@ -56,6 +57,37 @@ def _search_required(page: fitz.Page, query: str) -> list[fitz.Rect]:
     if not matches:
         raise PdfOperationError(f"No se encontro el texto: {query}")
     return matches
+
+
+def _rect_from_bbox(bbox: Any) -> fitz.Rect:
+    if not isinstance(bbox, list) or len(bbox) != 4:
+        raise PdfOperationError("'bbox' debe ser una lista [x0, y0, x1, y1].")
+    rect = fitz.Rect(*(float(v) for v in bbox))
+    if rect.is_empty or rect.is_infinite:
+        raise PdfOperationError("'bbox' no es un rectangulo valido.")
+    return rect
+
+
+def _insert_textbox_fit(
+    page: fitz.Page,
+    rect: fitz.Rect,
+    text: str,
+    *,
+    font_size: float,
+    color: tuple[float, float, float],
+) -> None:
+    target = fitz.Rect(rect.x0, rect.y0, rect.x1, max(rect.y1, rect.y0 + font_size + 6))
+    for size in (font_size, font_size * 0.9, font_size * 0.8, font_size * 0.7, font_size * 0.6):
+        overflow = page.insert_textbox(
+            target,
+            text,
+            fontsize=max(6, size),
+            color=color,
+            align=fitz.TEXT_ALIGN_LEFT,
+        )
+        if overflow >= 0:
+            return
+    page.insert_text((target.x0, target.y0 + max(6, font_size)), text, fontsize=6, color=color)
 
 
 def apply_operations(input_pdf: Path, output_pdf: Path, operations: list[dict[str, Any]]) -> dict[str, int]:
@@ -130,6 +162,21 @@ def apply_operations(input_pdf: Path, output_pdf: Path, operations: list[dict[st
                             fontsize=float(op.get("font_size", max(8, rect.height * 0.75))),
                             color=_rgb(op.get("color")),
                         )
+
+            elif op_type == "replace_block_text":
+                page = doc[_page_index(int(op["page"]), doc.page_count)]
+                rect = _rect_from_bbox(op["bbox"])
+                text = str(op["text"])
+                page.add_redact_annot(rect, fill=_rgb(op.get("fill") or "#ffffff"))
+                page.apply_redactions()
+                font_size = float(op.get("font_size", max(8, min(12, rect.height * 0.55))))
+                _insert_textbox_fit(
+                    page,
+                    rect,
+                    text,
+                    font_size=font_size,
+                    color=_rgb(op.get("color")),
+                )
 
             elif op_type == "rotate_page":
                 page = doc[_page_index(int(op["page"]), doc.page_count)]

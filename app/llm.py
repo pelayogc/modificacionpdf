@@ -7,6 +7,7 @@ from openai import OpenAI
 
 from app.config import settings
 from app.pdf_ops import SUPPORTED_OPERATIONS
+from app.pdf_context import pdf_context_for_prompt
 
 
 PLAN_SCHEMA: dict[str, Any] = {
@@ -35,20 +36,30 @@ SYSTEM_PROMPT = """Eres un planificador de modificaciones de PDF.
 Convierte la peticion del usuario en operaciones JSON ejecutables.
 No prometas cambios que no esten en las operaciones permitidas.
 Usa paginas 1-based. Si faltan coordenadas para anadir texto, usa posiciones razonables.
-Si la peticion es ambigua, genera una operacion conservadora o devuelve una marca de agua/nota visible.
+Usa el contexto del PDF para localizar el texto real antes de pedir una busqueda.
+Para cambios semanticos como "cambia la direccion", "actualiza el telefono" o "modifica el CIF", elige el bloque concreto del contexto y usa replace_block_text con su bbox.
+No uses replace_text con palabras genericas como "direccion", "telefono", "email" o "cliente"; replace_text solo debe buscar texto exacto visible en el documento.
+Si no puedes localizar con confianza el bloque afectado, anade una nota visible con add_text explicando que no se pudo localizar el dato exacto.
 Operaciones permitidas:
 - add_text: page, x, y, text, font_size opcional, color opcional hex.
 - add_watermark: text, pages opcional 'all'/numero/lista, opacity opcional, color opcional.
 - highlight_text: query, pages opcional, color opcional.
 - redact_text: query, pages opcional.
 - replace_text: find, replace, pages opcional, font_size opcional.
+- replace_block_text: page, bbox [x0,y0,x1,y1], text, font_size opcional.
 - rotate_page: page, degrees 0/90/180/270.
 - delete_pages: pages lista.
 - reorder_pages: order lista con todas las paginas.
 Devuelve solo el JSON valido del plan."""
 
 
-def build_pdf_plan(*, filename: str, page_count: int, instructions: str) -> dict[str, Any]:
+def build_pdf_plan(
+    *,
+    filename: str,
+    page_count: int,
+    instructions: str,
+    document_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     client = OpenAI()
     response = client.responses.create(
         model=settings.model,
@@ -70,6 +81,8 @@ def build_pdf_plan(*, filename: str, page_count: int, instructions: str) -> dict
                     f"Archivo: {filename}\n"
                     f"Numero de paginas: {page_count}\n"
                     f"Instrucciones: {instructions}"
+                    f"\nDOCUMENT_CONTEXT_JSON:\n"
+                    f"{pdf_context_for_prompt(document_context or {'pages': [], 'truncated': False})}"
                 ),
             },
         ],

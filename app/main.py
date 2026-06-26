@@ -14,6 +14,7 @@ from app.auth import CurrentUser, get_current_user, require_admin
 from app.config import settings
 from app.db import admin_stats, create_job, finish_job, get_job, init_db
 from app.llm import build_pdf_plan
+from app.pdf_context import extract_pdf_context
 from app.pdf_ops import PdfOperationError, apply_operations
 
 
@@ -83,7 +84,13 @@ async def process_pdf(
     try:
         with fitz.open(input_path) as doc:
             input_pages = doc.page_count
-        plan = build_pdf_plan(filename=pdf.filename, page_count=input_pages, instructions=instructions)
+        document_context = extract_pdf_context(input_path)
+        plan = build_pdf_plan(
+            filename=pdf.filename,
+            page_count=input_pages,
+            instructions=instructions,
+            document_context=document_context,
+        )
         operations = plan["operations"]
         result = apply_operations(input_path, output_path, operations)
         output_bytes = output_path.stat().st_size
