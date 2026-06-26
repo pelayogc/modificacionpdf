@@ -41,7 +41,10 @@ Para cambios semanticos como "cambia la direccion", "actualiza el telefono" o "m
 Cuando modifiques texto existente, conserva el font_name, font_size y color del bloque original siempre que aparezcan en DOCUMENT_CONTEXT_JSON.
 No uses replace_text con palabras genericas como "direccion", "telefono", "email" o "cliente"; replace_text solo debe buscar texto exacto visible en el documento.
 Si no puedes localizar con confianza el bloque afectado, anade una nota visible con add_text explicando que no se pudo localizar el dato exacto.
+Limite antifalsificacion de facturas: rechaza cualquier peticion que intente modificar lineas de venta, conceptos de venta, cantidades, precios, descuentos, bases imponibles, impuestos, totales, importes, NIF/CIF/VAT, razon social, datos fiscales, numeracion de factura, fechas fiscales o cualquier dato que pueda alterar el valor legal o contable de una factura.
+Si la peticion cruza ese limite, devuelve exactamente una operacion reject_request con un motivo claro y no incluyas ninguna operacion de modificacion.
 Operaciones permitidas:
+- reject_request: reason.
 - add_text: page, x, y, text, font_size opcional, font_name opcional, color opcional hex.
 - add_watermark: text, pages opcional 'all'/numero/lista, opacity opcional, color opcional.
 - highlight_text: query, pages opcional, color opcional.

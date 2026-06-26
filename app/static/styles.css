@@ -133,6 +133,11 @@ button:hover,
   margin: 0;
 }
 
+.limits {
+  color: #4c2b16;
+  margin-bottom: 0;
+}
+
 pre {
   background: #101820;
   border-radius: 6px;

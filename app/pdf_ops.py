@@ -15,6 +15,7 @@ SUPPORTED_OPERATIONS = {
     "add_watermark",
     "highlight_text",
     "redact_text",
+    "reject_request",
     "replace_block_text",
     "replace_text",
     "rotate_page",
@@ -134,6 +135,13 @@ def _insert_textbox_fit(
 def apply_operations(input_pdf: Path, output_pdf: Path, operations: list[dict[str, Any]]) -> dict[str, int]:
     if not operations:
         raise PdfOperationError("El plan no contiene operaciones aplicables.")
+    rejection = next((op for op in operations if op.get("type") == "reject_request"), None)
+    if rejection:
+        reason = str(
+            rejection.get("reason")
+            or "Solicitud rechazada porque puede alterar datos fiscales o de factura."
+        )
+        raise PdfOperationError(reason)
 
     doc = fitz.open(input_pdf)
     input_pages = doc.page_count

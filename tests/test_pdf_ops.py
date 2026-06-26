@@ -1,8 +1,9 @@
 from pathlib import Path
 
 import fitz
+import pytest
 
-from app.pdf_ops import apply_operations
+from app.pdf_ops import PdfOperationError, apply_operations
 
 
 def _sample_pdf(path: Path) -> None:
@@ -82,3 +83,18 @@ def test_replace_block_text(tmp_path: Path) -> None:
         assert "Calle Antigua 1" not in text
         spans = doc[0].get_text("dict")["blocks"][0]["lines"][0]["spans"]
         assert round(spans[0]["size"]) == 12
+
+
+def test_reject_request_blocks_pdf_modification(tmp_path: Path) -> None:
+    source = tmp_path / "source.pdf"
+    output = tmp_path / "output.pdf"
+    _sample_pdf(source)
+
+    with pytest.raises(PdfOperationError, match="factura"):
+        apply_operations(
+            source,
+            output,
+            [{"type": "reject_request", "reason": "No se pueden modificar importes de factura."}],
+        )
+
+    assert not output.exists()
