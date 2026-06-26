@@ -69,6 +69,8 @@ def test_replace_block_text(tmp_path: Path) -> None:
                 "page": 1,
                 "bbox": [rect.x0, rect.y0, rect.x1, rect.y1],
                 "text": "Direccion: Calle Nueva 2",
+                "font_name": "Helvetica",
+                "font_size": 12,
             }
         ],
     )
@@ -78,3 +80,5 @@ def test_replace_block_text(tmp_path: Path) -> None:
         text = doc[0].get_text()
         assert "Calle Nueva 2" in text
         assert "Calle Antigua 1" not in text
+        spans = doc[0].get_text("dict")["blocks"][0]["lines"][0]["spans"]
+        assert round(spans[0]["size"]) == 12

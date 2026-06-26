@@ -36,6 +36,7 @@ Coolify esta en `http://10.164.18.45:8000/`.
 ## Aprendizajes de modificacion PDF
 
 - Para cambios semanticos en PDFs, como modificar una direccion, telefono, CIF o dato de cliente, el LLM debe recibir primero texto extraido del PDF con bloques y coordenadas. No planificar `replace_text` con palabras genericas como `direccion`; usar operaciones basadas en bloque/rectangulo cuando el usuario pide cambiar un dato localizado por contexto.
+- Al modificar texto existente en un PDF, preservar los tipos de letra, tamanos y color del bloque original siempre que el extractor pueda obtenerlos. El contexto enviado al LLM debe incluir esos metadatos y las operaciones deben reutilizarlos.
 
 ## Aprendizajes Coolify y Cloudflare
 

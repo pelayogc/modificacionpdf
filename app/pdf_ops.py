@@ -41,6 +41,39 @@ def _rgb(color: str | None) -> tuple[float, float, float]:
         raise PdfOperationError(f"Color no valido: {color}") from exc
 
 
+def _pdf_font_name(font_name: Any) -> str:
+    raw = str(font_name or "helv").lower()
+    is_bold = "bold" in raw or raw.endswith("-bd") or "black" in raw
+    is_italic = "italic" in raw or "oblique" in raw or raw.endswith("-it")
+    if "cour" in raw:
+        if is_bold and is_italic:
+            return "cobi"
+        if is_bold:
+            return "cobo"
+        if is_italic:
+            return "coit"
+        return "cour"
+    if "times" in raw or "roman" in raw:
+        if is_bold and is_italic:
+            return "tibi"
+        if is_bold:
+            return "tibo"
+        if is_italic:
+            return "tiit"
+        return "tiro"
+    if "symbol" in raw:
+        return "symb"
+    if "zapf" in raw:
+        return "zadb"
+    if is_bold and is_italic:
+        return "hebi"
+    if is_bold:
+        return "hebo"
+    if is_italic:
+        return "heit"
+    return "helv"
+
+
 def _pages_for_operation(op: dict[str, Any], page_count: int) -> list[int]:
     pages = op.get("pages")
     if pages == "all" or pages is None:
@@ -74,6 +107,7 @@ def _insert_textbox_fit(
     text: str,
     *,
     font_size: float,
+    font_name: str,
     color: tuple[float, float, float],
 ) -> None:
     target = fitz.Rect(rect.x0, rect.y0, rect.x1, max(rect.y1, rect.y0 + font_size + 6))
@@ -82,12 +116,19 @@ def _insert_textbox_fit(
             target,
             text,
             fontsize=max(6, size),
+            fontname=font_name,
             color=color,
             align=fitz.TEXT_ALIGN_LEFT,
         )
         if overflow >= 0:
             return
-    page.insert_text((target.x0, target.y0 + max(6, font_size)), text, fontsize=6, color=color)
+    page.insert_text(
+        (target.x0, target.y0 + max(6, font_size)),
+        text,
+        fontsize=6,
+        fontname=font_name,
+        color=color,
+    )
 
 
 def apply_operations(input_pdf: Path, output_pdf: Path, operations: list[dict[str, Any]]) -> dict[str, int]:
@@ -110,6 +151,7 @@ def apply_operations(input_pdf: Path, output_pdf: Path, operations: list[dict[st
                     (float(op["x"]), float(op["y"])),
                     str(op["text"]),
                     fontsize=font_size,
+                    fontname=_pdf_font_name(op.get("font_name")),
                     color=_rgb(op.get("color")),
                 )
 
@@ -160,6 +202,7 @@ def apply_operations(input_pdf: Path, output_pdf: Path, operations: list[dict[st
                             (rect.x0, rect.y1 - 2),
                             replacement,
                             fontsize=float(op.get("font_size", max(8, rect.height * 0.75))),
+                            fontname=_pdf_font_name(op.get("font_name")),
                             color=_rgb(op.get("color")),
                         )
 
@@ -175,6 +218,7 @@ def apply_operations(input_pdf: Path, output_pdf: Path, operations: list[dict[st
                     rect,
                     text,
                     font_size=font_size,
+                    font_name=_pdf_font_name(op.get("font_name")),
                     color=_rgb(op.get("color")),
                 )
 
